@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/001-create-photos-table.sql
+  - include:
+      file: db/changelog/changes/002-seed-photos.sql
+  - include:
+      file: db/changelog/changes/003-create-telegram-intake-tables.sql
+  - include:
+      file: db/changelog/changes/004-link-telegram-submissions-to-photos.sql

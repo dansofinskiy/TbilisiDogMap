@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tbilisi Dog Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="map-shell">
+      <div class="map-overlay">
+        <div class="overlay-topbar">
+          <p class="eyebrow" data-i18n="eyebrow">dog atlas</p>
+          <label class="language-switcher">
+            <span class="sr-only" data-i18n="languageLabel">Язык приложения</span>
+            <select id="language-select">
+              <option value="ka">🇬🇪 KA</option>
+              <option value="en">🇬🇧 EN</option>
+              <option value="ru" selected>🇷🇺 RU</option>
+            </select>
+          </label>
+        </div>
+        <h1 data-i18n="title">Карта собак Тбилиси</h1>
+        <p class="lede" data-i18n="subtitle">
+          Геометки с фотографиями собак и AI-описаниями. Карточка открывается прямо
+          на карте.
+        </p>
+        <p id="map-status" class="map-status" aria-live="polite"></p>
+      </div>
+      <div id="map" class="map"></div>
+    </main>
+
+    <script src="./config.js"></script>
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>

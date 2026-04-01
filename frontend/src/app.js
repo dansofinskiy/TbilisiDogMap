@@ -1,0 +1,393 @@
+import { loadPhotoDetails, loadPhotoMarkers } from "./api.js";
+
+const tbilisiCenter = [44.8015, 41.7151];
+const languageSelect = document.querySelector("#language-select");
+const mapStatus = document.querySelector("#map-status");
+const translatableElements = document.querySelectorAll("[data-i18n]");
+
+const translations = {
+  ru: {
+    htmlLang: "ru",
+    titleText: "Tbilisi Dog Map",
+    eyebrow: "dog atlas",
+    title: "Карта собак Тбилиси",
+    subtitle:
+      "Геометки с фотографиями собак и AI-описаниями. Карточка открывается прямо на карте.",
+    languageLabel: "Язык приложения",
+    popupEyebrow: "выбранная точка",
+    district: "Район",
+    confidence: "AI confidence",
+    coordinates: "Координаты",
+    addedAt: "Добавлено",
+    popupLoading: "Загружаем карточку фотографии...",
+    popupError: "Не удалось загрузить карточку фотографии.",
+    statusLoading: "Загружаем точки с сервера...",
+    statusApi: "Геометки загружены с Kotlin API.",
+    statusEmpty: "Пока нет опубликованных фотографий.",
+    statusError: "Не удалось загрузить точки с сервера.",
+    dateLocale: "ru-RU",
+  },
+  en: {
+    htmlLang: "en",
+    titleText: "Tbilisi Dog Map",
+    eyebrow: "dog atlas",
+    title: "Tbilisi Dog Map",
+    subtitle:
+      "Geotagged dog photos with AI descriptions. Each card opens directly on the map.",
+    languageLabel: "Application language",
+    popupEyebrow: "selected point",
+    district: "District",
+    confidence: "AI confidence",
+    coordinates: "Coordinates",
+    addedAt: "Added",
+    popupLoading: "Loading photo details...",
+    popupError: "Could not load photo details.",
+    statusLoading: "Loading map points from the server...",
+    statusApi: "Markers loaded from the Kotlin API.",
+    statusEmpty: "There are no published photos yet.",
+    statusError: "Could not load map points from the server.",
+    dateLocale: "en-US",
+  },
+  ka: {
+    htmlLang: "ka",
+    titleText: "თბილისის ძაღლების რუკა",
+    eyebrow: "dog atlas",
+    title: "თბილისის ძაღლების რუკა",
+    subtitle:
+      "ძაღლების ფოტოები გეომონიშნებით და AI აღწერებით. ბარათი პირდაპირ რუკაზე იხსნება.",
+    languageLabel: "აპლიკაციის ენა",
+    popupEyebrow: "არჩეული წერტილი",
+    district: "რაიონი",
+    confidence: "AI სანდოობა",
+    coordinates: "კოორდინატები",
+    addedAt: "დამატების თარიღი",
+    popupLoading: "ფოტოს ბარათი იტვირთება...",
+    popupError: "ფოტოს ბარათის ჩატვირთვა ვერ მოხერხდა.",
+    statusLoading: "რუკის წერტილები იტვირთება სერვერიდან...",
+    statusApi: "გეომონიშნებები ჩაიტვირთა Kotlin API-დან.",
+    statusEmpty: "გამოქვეყნებული ფოტოები ჯერ არ არის.",
+    statusError: "სერვერიდან წერტილების ჩატვირთვა ვერ მოხერხდა.",
+    dateLocale: "ka-GE",
+  },
+};
+
+let currentLanguage = languageSelect?.value || "ru";
+let markers = [];
+let lastLoadState = "loading";
+const photoCache = new Map();
+
+const popup = new maplibregl.Popup({
+  offset: 18,
+  closeButton: true,
+  maxWidth: "360px",
+});
+
+const map = new maplibregl.Map({
+  container: "map",
+  style: {
+    version: 8,
+    sources: {
+      osm: {
+        type: "raster",
+        tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+        tileSize: 256,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      },
+    },
+    layers: [{ id: "osm", type: "raster", source: "osm" }],
+  },
+  center: tbilisiCenter,
+  zoom: 12,
+});
+
+map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+map.on("load", async () => {
+  applyTranslations();
+  setStatus("statusLoading");
+
+  try {
+    markers = await loadPhotoMarkers();
+    lastLoadState = "api";
+
+    renderClusters();
+    bindMapInteractions();
+    updateMapFocus();
+
+    if (markers.length === 0) {
+      setStatus("statusEmpty");
+      return;
+    }
+
+    setStatus("statusApi");
+  } catch (error) {
+    console.error("Failed to load map markers:", error);
+    markers = [];
+    lastLoadState = "error";
+    updateMapFocus();
+    setStatus("statusError");
+  }
+});
+
+function renderClusters() {
+  map.addSource("dog-photos", {
+    type: "geojson",
+    data: createFeatureCollection(markers),
+    cluster: true,
+    clusterMaxZoom: 14,
+    clusterRadius: 48,
+  });
+
+  map.addLayer({
+    id: "clusters",
+    type: "circle",
+    source: "dog-photos",
+    filter: ["has", "point_count"],
+    paint: {
+      "circle-color": "#df6c2f",
+      "circle-radius": ["step", ["get", "point_count"], 22, 10, 28, 25, 34],
+      "circle-stroke-width": 3,
+      "circle-stroke-color": "rgba(255, 250, 244, 0.92)",
+      "circle-opacity": 0.92,
+    },
+  });
+
+  map.addLayer({
+    id: "cluster-count",
+    type: "symbol",
+    source: "dog-photos",
+    filter: ["has", "point_count"],
+    layout: {
+      "text-field": ["get", "point_count_abbreviated"],
+      "text-font": ["Noto Sans Regular"],
+      "text-size": 13,
+    },
+    paint: {
+      "text-color": "#fffaf0",
+    },
+  });
+
+  map.addLayer({
+    id: "unclustered-point",
+    type: "circle",
+    source: "dog-photos",
+    filter: ["!", ["has", "point_count"]],
+    paint: {
+      "circle-color": "#df6c2f",
+      "circle-radius": 9,
+      "circle-stroke-width": 3,
+      "circle-stroke-color": "rgba(255, 250, 244, 0.92)",
+    },
+  });
+}
+
+function bindMapInteractions() {
+  map.on("click", "clusters", (event) => {
+    const feature = map.queryRenderedFeatures(event.point, {
+      layers: ["clusters"],
+    })[0];
+
+    if (!feature) {
+      return;
+    }
+
+    const clusterId = feature.properties.cluster_id;
+
+    map.getSource("dog-photos").getClusterExpansionZoom(clusterId, (error, zoom) => {
+      if (error) {
+        return;
+      }
+
+      map.easeTo({
+        center: feature.geometry.coordinates,
+        zoom,
+        duration: 500,
+      });
+    });
+  });
+
+  map.on("click", "unclustered-point", async (event) => {
+    const feature = event.features?.[0];
+
+    if (!feature) {
+      return;
+    }
+
+    const photoId = feature.properties.id;
+    const marker = markers.find((entry) => entry.id === photoId);
+
+    if (!marker) {
+      return;
+    }
+
+    popup
+      .setLngLat([marker.lng, marker.lat])
+      .setHTML(createLoadingPopupMarkup())
+      .addTo(map);
+
+    try {
+      const photo = await getPhotoDetails(photoId);
+      popup
+        .setLngLat([photo.lng, photo.lat])
+        .setHTML(createPopupMarkup(photo));
+    } catch (error) {
+      console.error(`Failed to load photo ${photoId}:`, error);
+      popup
+        .setLngLat([marker.lng, marker.lat])
+        .setHTML(createErrorPopupMarkup());
+    }
+  });
+
+  map.on("mouseenter", "clusters", () => {
+    map.getCanvas().style.cursor = "pointer";
+  });
+
+  map.on("mouseleave", "clusters", () => {
+    map.getCanvas().style.cursor = "";
+  });
+
+  map.on("mouseenter", "unclustered-point", () => {
+    map.getCanvas().style.cursor = "pointer";
+  });
+
+  map.on("mouseleave", "unclustered-point", () => {
+    map.getCanvas().style.cursor = "";
+  });
+}
+
+async function getPhotoDetails(photoId) {
+  if (photoCache.has(photoId)) {
+    return photoCache.get(photoId);
+  }
+
+  const photo = await loadPhotoDetails(photoId);
+  photoCache.set(photoId, photo);
+  return photo;
+}
+
+function createLoadingPopupMarkup() {
+  return `<article class="popup-card popup-state"><p>${translations[currentLanguage].popupLoading}</p></article>`;
+}
+
+function createErrorPopupMarkup() {
+  return `<article class="popup-card popup-state"><p>${translations[currentLanguage].popupError}</p></article>`;
+}
+
+function createPopupMarkup(photo) {
+  const t = translations[currentLanguage];
+
+  return `
+    <article class="popup-card">
+      <img class="details-image" src="${photo.imageUrl}" alt="${photo.title}" />
+      <div class="details-header">
+        <div>
+          <p class="eyebrow">${t.popupEyebrow}</p>
+          <h3>${photo.title}</h3>
+        </div>
+        <span class="status-pill">${photo.source}</span>
+      </div>
+      <p class="details-subtitle">${photo.aiDescription}</p>
+      <p class="details-caption">${photo.caption}</p>
+      <div class="details-grid">
+        <div class="details-stat">
+          <span class="details-stat-label">${t.district}</span>
+          <span class="details-stat-value">${photo.district}</span>
+        </div>
+        <div class="details-stat">
+          <span class="details-stat-label">${t.confidence}</span>
+          <span class="details-stat-value">${Math.round(photo.aiConfidence * 100)}%</span>
+        </div>
+        <div class="details-stat">
+          <span class="details-stat-label">${t.coordinates}</span>
+          <span class="details-stat-value">${photo.lat.toFixed(4)}, ${photo.lng.toFixed(4)}</span>
+        </div>
+        <div class="details-stat">
+          <span class="details-stat-label">${t.addedAt}</span>
+          <span class="details-stat-value">${formatDate(photo.createdAt)}</span>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function createFeatureCollection(items) {
+  return {
+    type: "FeatureCollection",
+    features: items.map((photo) => ({
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: [photo.lng, photo.lat],
+      },
+      properties: {
+        id: photo.id,
+      },
+    })),
+  };
+}
+
+function applyTranslations() {
+  const t = translations[currentLanguage];
+
+  document.documentElement.lang = t.htmlLang;
+  document.title = t.titleText;
+  languageSelect?.setAttribute("aria-label", t.languageLabel);
+
+  translatableElements.forEach((element) => {
+    const key = element.dataset.i18n;
+
+    if (t[key]) {
+      element.textContent = t[key];
+    }
+  });
+
+  if (popup.isOpen()) {
+    popup.remove();
+  }
+}
+
+function updateMapFocus() {
+  if (markers.length === 0) {
+    map.flyTo({ center: tbilisiCenter, zoom: 11.5, essential: true });
+    return;
+  }
+
+  if (markers.length === 1) {
+    const [photo] = markers;
+    map.flyTo({ center: [photo.lng, photo.lat], zoom: 14, essential: true });
+    return;
+  }
+
+  const bounds = new maplibregl.LngLatBounds();
+  markers.forEach((photo) => bounds.extend([photo.lng, photo.lat]));
+  map.fitBounds(bounds, { padding: 64, maxZoom: 14, duration: 800 });
+}
+
+function formatDate(value) {
+  return new Intl.DateTimeFormat(translations[currentLanguage].dateLocale, {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function setStatus(key) {
+  if (!mapStatus) {
+    return;
+  }
+
+  mapStatus.textContent = translations[currentLanguage][key] ?? "";
+}
+
+languageSelect?.addEventListener("change", (event) => {
+  currentLanguage = event.target.value;
+  applyTranslations();
+
+  if (markers.length === 0) {
+    setStatus(lastLoadState === "error" ? "statusError" : "statusEmpty");
+    return;
+  }
+
+  setStatus("statusApi");
+});
