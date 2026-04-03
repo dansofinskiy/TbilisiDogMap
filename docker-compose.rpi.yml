@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgis/postgis:17-3.5-alpine
+    container_name: tbilisi-dog-map-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-tbilisi_dog_map}
+      POSTGRES_USER: ${DB_USERNAME:-my_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-my_pass}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - tbilisi_dog_map_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-my_user} -d ${DB_NAME:-tbilisi_dog_map}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tbilisi-dog-map-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: ${APP_PORT:-8080}
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-tbilisi_dog_map}
+      DB_USERNAME: ${DB_USERNAME:-my_user}
+      DB_PASSWORD: ${DB_PASSWORD:-my_pass}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      CORS_ALLOWED_ORIGIN_PATTERNS: ${CORS_ALLOWED_ORIGIN_PATTERNS:-*}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+
+volumes:
+  tbilisi_dog_map_postgres_data:

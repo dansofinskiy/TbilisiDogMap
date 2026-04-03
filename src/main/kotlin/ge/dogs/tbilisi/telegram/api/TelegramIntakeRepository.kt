@@ -3,8 +3,8 @@ package ge.dogs.tbilisi.telegram.api
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Repository
-import java.time.Instant
 import java.sql.Timestamp
+import java.time.Instant
 
 @Repository
 class TelegramIntakeRepository(

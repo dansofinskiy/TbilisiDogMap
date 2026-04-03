@@ -124,6 +124,55 @@ h1 {
   width: 100%;
 }
 
+.modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.modal-root[hidden] {
+  display: none;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(33, 24, 16, 0.42);
+  backdrop-filter: blur(10px);
+}
+
+.modal-panel {
+  position: relative;
+  z-index: 1;
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  border-radius: 24px;
+  background: rgba(255, 251, 244, 0.98);
+  box-shadow: 0 24px 64px rgba(55, 35, 17, 0.26);
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 251, 244, 0.96);
+  color: var(--muted);
+  font: inherit;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(55, 35, 17, 0.12);
+}
+
 .district-pill,
 .status-pill {
   display: inline-flex;
@@ -144,27 +193,8 @@ h1 {
   color: #3d6850;
 }
 
-.maplibregl-popup {
-  max-width: 360px;
-}
-
-.maplibregl-popup-content {
-  padding: 0;
-  overflow: hidden;
-  border-radius: 22px;
-  background: rgba(255, 251, 244, 0.98);
-  font-family: "Manrope", sans-serif;
-  box-shadow: 0 22px 48px rgba(55, 35, 17, 0.22);
-}
-
-.maplibregl-popup-close-button {
-  padding: 8px 12px;
-  font-size: 22px;
-  color: var(--muted);
-}
-
 .popup-card {
-  width: min(360px, calc(100vw - 48px));
+  width: 100%;
 }
 
 .popup-state {
@@ -174,6 +204,55 @@ h1 {
 .popup-state p {
   color: var(--muted);
   line-height: 1.5;
+}
+
+.cluster-card {
+  width: 100%;
+}
+
+.cluster-card-body {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  padding: 18px;
+}
+
+.cluster-badge {
+  display: inline-flex;
+  min-width: 56px;
+  min-height: 56px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #df6c2f 0%, #b84817 100%);
+  box-shadow: 0 10px 24px rgba(173, 70, 21, 0.24);
+  color: #fffaf0;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.cluster-summary {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.cluster-action {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 11px 16px;
+  background: var(--text);
+  color: #fffaf0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.cluster-action:hover {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
 }
 
 .details-image {
@@ -248,5 +327,14 @@ h1 {
 
   .details-grid {
     grid-template-columns: 1fr;
+  }
+
+  .modal-root {
+    padding: 16px;
+  }
+
+  .modal-panel {
+    width: min(100%, calc(100vw - 16px));
+    max-height: calc(100vh - 16px);
   }
 }

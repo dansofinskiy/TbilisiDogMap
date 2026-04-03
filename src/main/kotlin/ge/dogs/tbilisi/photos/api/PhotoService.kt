@@ -8,7 +8,8 @@ import org.springframework.http.HttpStatus
 class PhotoService(
     private val photoRepository: PhotoRepository,
 ) {
-    fun getPublishedPhotoMarkers(): List<MapPhotoMarkerDto> = photoRepository.findPublishedMarkers()
+    fun getPublishedPhotoMarkers(boundingBox: BoundingBox): List<MapPhotoMarkerDto> =
+        photoRepository.findPublishedMarkers(boundingBox)
 
     fun getPhotoById(id: String): PhotoDetailsDto {
         val photo = photoRepository.findPublishedPhotoById(id)

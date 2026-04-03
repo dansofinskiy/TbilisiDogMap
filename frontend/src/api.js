@@ -3,8 +3,9 @@ const API_BASE_URL = (
   window.location.origin
 ).replace(/\/$/, "");
 
-export async function loadPhotoMarkers() {
-  const response = await fetch(`${API_BASE_URL}/api/map/photos`, {
+export async function loadPhotoMarkers(bounds) {
+  const bbox = serializeBounds(bounds);
+  const response = await fetch(`${API_BASE_URL}/api/map/photos?bbox=${encodeURIComponent(bbox)}`, {
     headers: {
       Accept: "application/json",
     },
@@ -22,6 +23,17 @@ export async function loadPhotoMarkers() {
   }
 
   return items.map(adaptMarkerDto);
+}
+
+function serializeBounds(bounds) {
+  const southWest = bounds.getSouthWest();
+  const northEast = bounds.getNorthEast();
+  return [
+    southWest.lng,
+    southWest.lat,
+    northEast.lng,
+    northEast.lat,
+  ].join(",");
 }
 
 export async function loadPhotoDetails(photoId) {

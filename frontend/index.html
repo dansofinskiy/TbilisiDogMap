@@ -38,6 +38,25 @@
         <p id="map-status" class="map-status" aria-live="polite"></p>
       </div>
       <div id="map" class="map"></div>
+      <div id="modal-root" class="modal-root" hidden>
+        <div class="modal-backdrop" data-close-modal="true"></div>
+        <div
+          class="modal-panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
+          <button
+            type="button"
+            class="modal-close"
+            aria-label="Close"
+            data-close-modal="true"
+          >
+            ×
+          </button>
+          <div id="modal-content"></div>
+        </div>
+      </div>
     </main>
 
     <script src="./config.js"></script>

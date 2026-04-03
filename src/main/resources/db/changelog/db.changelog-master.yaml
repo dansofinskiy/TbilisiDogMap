@@ -7,3 +7,7 @@ databaseChangeLog:
       file: db/changelog/changes/003-create-telegram-intake-tables.sql
   - include:
       file: db/changelog/changes/004-link-telegram-submissions-to-photos.sql
+  - include:
+      file: db/changelog/changes/005-create-photos-bbox-index.sql
+  - include:
+      file: db/changelog/changes/006-enable-postgis-and-create-spatial-index.sql

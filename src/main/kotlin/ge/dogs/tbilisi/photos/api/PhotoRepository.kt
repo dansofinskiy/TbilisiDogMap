@@ -10,14 +10,22 @@ import java.time.Instant
 class PhotoRepository(
     private val jdbcClient: JdbcClient,
 ) {
-    fun findPublishedMarkers(): List<MapPhotoMarkerDto> = jdbcClient.sql(
+    fun findPublishedMarkers(boundingBox: BoundingBox): List<MapPhotoMarkerDto> = jdbcClient.sql(
         """
         select id, latitude, longitude
         from photos
         where status = 'PUBLISHED'
+          and ST_Intersects(
+                ST_SetSRID(ST_MakePoint(longitude, latitude), 4326),
+                ST_MakeEnvelope(:minLongitude, :minLatitude, :maxLongitude, :maxLatitude, 4326)
+          )
         order by created_at desc
         """.trimIndent(),
     )
+        .param("minLongitude", boundingBox.minLongitude)
+        .param("maxLongitude", boundingBox.maxLongitude)
+        .param("minLatitude", boundingBox.minLatitude)
+        .param("maxLatitude", boundingBox.maxLatitude)
         .query(markerRowMapper)
         .list()
 
