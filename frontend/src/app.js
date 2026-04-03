@@ -15,9 +15,9 @@ const translations = {
     title: "Карта собак Тбилиси",
     subtitle:
       "Геометки с фотографиями собак и AI-описаниями. Карточка открывается прямо на карте.",
+    botLabel: "Отправить фото в бота:",
     languageLabel: "Язык приложения",
     popupEyebrow: "выбранная точка",
-    district: "Район",
     confidence: "AI confidence",
     coordinates: "Координаты",
     addedAt: "Добавлено",
@@ -39,9 +39,9 @@ const translations = {
     title: "Tbilisi Dog Map",
     subtitle:
       "Geotagged dog photos with AI descriptions. Each card opens directly on the map.",
+    botLabel: "Send a photo to the bot:",
     languageLabel: "Application language",
     popupEyebrow: "selected point",
-    district: "District",
     confidence: "AI confidence",
     coordinates: "Coordinates",
     addedAt: "Added",
@@ -63,9 +63,9 @@ const translations = {
     title: "თბილისის ძაღლების რუკა",
     subtitle:
       "ძაღლების ფოტოები გეომონიშნებით და AI აღწერებით. ბარათი პირდაპირ რუკაზე იხსნება.",
+    botLabel: "ფოტოს გაგზავნა ბოტში:",
     languageLabel: "აპლიკაციის ენა",
     popupEyebrow: "არჩეული წერტილი",
-    district: "რაიონი",
     confidence: "AI სანდოობა",
     coordinates: "კოორდინატები",
     addedAt: "დამატების თარიღი",
@@ -331,10 +331,6 @@ function createPopupMarkup(photo) {
       <p class="details-subtitle">${photo.aiDescription}</p>
       <p class="details-caption">${photo.caption}</p>
       <div class="details-grid">
-        <div class="details-stat">
-          <span class="details-stat-label">${t.district}</span>
-          <span class="details-stat-value">${photo.district}</span>
-        </div>
         <div class="details-stat">
           <span class="details-stat-label">${t.confidence}</span>
           <span class="details-stat-value">${Math.round(photo.aiConfidence * 100)}%</span>

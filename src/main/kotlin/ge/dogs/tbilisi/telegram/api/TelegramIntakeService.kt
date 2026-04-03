@@ -10,16 +10,18 @@ class TelegramIntakeService(
     private val telegramIntakeRepository: TelegramIntakeRepository,
     private val telegramSubmissionProcessor: TelegramSubmissionProcessor,
     private val telegramBotClient: TelegramBotClient,
+    private val telegramBotMessages: TelegramBotMessages,
 ) {
     @Transactional
     fun handleMessage(message: TelegramMessage) {
         val chatId = message.chat.id
         val from = message.from ?: return
+        val language = telegramBotMessages.resolve(from.languageCode)
 
         if (message.text == "/start") {
             telegramBotClient.sendMessage(
                 chatId = chatId,
-                text = "Send a dog photo and a location. You can send them in any order.",
+                text = telegramBotMessages.start(language),
             )
             return
         }
@@ -64,7 +66,7 @@ class TelegramIntakeService(
             else -> {
                 telegramBotClient.sendMessage(
                     chatId = chatId,
-                    text = "Please send a photo or a geolocation so I can create a submission.",
+                    text = telegramBotMessages.sendPhotoOrLocation(language),
                 )
                 return
             }
@@ -74,14 +76,14 @@ class TelegramIntakeService(
             updatedDraft.photoFileId == null -> {
                 telegramBotClient.sendMessage(
                     chatId = chatId,
-                    text = "Location received. Now send the dog photo.",
+                    text = telegramBotMessages.requestPhoto(language),
                 )
             }
 
             updatedDraft.latitude == null || updatedDraft.longitude == null -> {
                 telegramBotClient.sendMessage(
                     chatId = chatId,
-                    text = "Photo received. Now send the geolocation for this dog.",
+                    text = telegramBotMessages.requestLocation(language),
                 )
             }
 
@@ -101,11 +103,28 @@ class TelegramIntakeService(
                 )
                 telegramIntakeRepository.insertSubmission(submission)
                 telegramIntakeRepository.deleteDraft(chatId)
-                telegramSubmissionProcessor.process(submission)
-                telegramBotClient.sendMessage(
-                    chatId = chatId,
-                    text = "Thanks. The photo and location were saved and published on the map.",
-                )
+                when (val result = telegramSubmissionProcessor.process(submission, language)) {
+                    is SubmissionProcessingResult.Published -> {
+                        telegramBotClient.sendMessage(
+                            chatId = chatId,
+                            text = telegramBotMessages.published(language),
+                        )
+                    }
+
+                    is SubmissionProcessingResult.Rejected -> {
+                        telegramBotClient.sendMessage(
+                            chatId = chatId,
+                            text = result.message,
+                        )
+                    }
+
+                    is SubmissionProcessingResult.Failed -> {
+                        telegramBotClient.sendMessage(
+                            chatId = chatId,
+                            text = telegramBotMessages.analysisFailed(language),
+                        )
+                    }
+                }
             }
         }
     }

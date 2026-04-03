@@ -16,6 +16,10 @@ telegram:
   bot:
     token: ${TELEGRAM_BOT_TOKEN:}
 
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  model: ${OPENAI_MODEL:gpt-4.1-mini}
+
 app:
   cors:
     allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:https://*.github.io}

@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/changes/005-create-photos-bbox-index.sql
   - include:
       file: db/changelog/changes/006-enable-postgis-and-create-spatial-index.sql
+  - include:
+      file: db/changelog/changes/007-remove-seed-photos-for-beta.sql

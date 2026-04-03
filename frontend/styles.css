@@ -55,6 +55,22 @@ h1 {
   line-height: 1.5;
 }
 
+.bot-link-line {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.bot-link-line a {
+  color: var(--accent-dark);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.bot-link-line a:hover {
+  text-decoration: underline;
+}
+
 .map-shell {
   position: relative;
   min-height: 100vh;

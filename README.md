@@ -102,6 +102,7 @@ Telegram bot:
 - webhook: `/api/telegram/webhook`
 - flow: бот ждет фото и геолокацию в любом порядке, сохраняет draft, создает submission и сразу проводит его через backend-процессинг
 - submission statuses: `NEW -> PROCESSING -> PUBLISHED` или `FAILED`
+- AI analysis: при наличии `OPENAI_API_KEY` backend сначала проверяет, есть ли на фото собака, а затем генерирует краткое описание окраса и размера
 
 Render-ready env vars:
 
@@ -110,6 +111,8 @@ Render-ready env vars:
 - `DB_USERNAME`
 - `DB_PASSWORD`
 - `TELEGRAM_BOT_TOKEN`
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL`
 - `CORS_ALLOWED_ORIGIN_PATTERNS`
 
 ## Следующие шаги

@@ -27,6 +27,8 @@ data class TelegramChat(
 data class TelegramUser(
     val id: Long,
     val username: String? = null,
+    @JsonProperty("language_code")
+    val languageCode: String? = null,
 )
 
 data class TelegramPhotoSize(
