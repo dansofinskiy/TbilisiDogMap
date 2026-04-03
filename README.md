@@ -63,7 +63,7 @@ docker compose --profile local-db up -d --build
 
 ## Raspberry Pi + PostGIS
 
-Для Raspberry Pi подготовлен отдельный compose-файл с образом `postgis/postgis:17-3.5-alpine`:
+Для Raspberry Pi подготовлен отдельный compose-файл со своим PostGIS-образом на базе `postgres:17-bookworm`:
 
 ```bash
 cp .env.rpi.example .env
@@ -72,7 +72,7 @@ docker compose -f docker-compose.rpi.yml up -d --build
 
 Что делает этот сценарий:
 
-- поднимает `postgis/postgis`
+- собирает локальный DB image из [Dockerfile.postgis-rpi](/Users/d.sofinskii/Documents/New%20project/Dockerfile.postgis-rpi)
 - создает обычный PostgreSQL database для приложения
 - backend подключается к БД по внутреннему имени `db`
 - Liquibase включает `postgis` и создает spatial index для геозапросов
