@@ -37,8 +37,11 @@ class TelegramSubmissionProcessor(
                 )
             }
 
-            val generatedDescription = analysis.description.takeIf { it.isNotBlank() }
-                ?: buildFallbackDescription(analysis)
+            val generatedDescription = if (analysis.description.isNotBlank()) {
+                analysis.description
+            } else {
+                buildFallbackDescription(analysis)
+            }
 
             photoRepository.insertTelegramPhoto(
                 id = photoId,
@@ -78,11 +81,16 @@ class TelegramSubmissionProcessor(
             "https://placehold.co/1200x900/f4efe5/2f2418?text=Dog+photo+pending"
     }
 
-    private fun buildFallbackDescription(analysis: ge.dogs.tbilisi.ai.DogPhotoAnalysis): String {
-        val parts = listOfNotNull(
-            analysis.size.takeIf { it != "unknown" }?.let { "$it-sized" },
-            analysis.coatColor.takeIf { it.isNotBlank() },
-        )
+    private fun buildFallbackDescription(analysis: AiPhotoAnalysis): String {
+        val parts = mutableListOf<String>()
+
+        if (analysis.size != "unknown") {
+            parts += "${analysis.size}-sized"
+        }
+
+        if (analysis.coatColor.isNotBlank()) {
+            parts += analysis.coatColor
+        }
 
         return if (parts.isEmpty()) {
             "Dog detected in the photo."
@@ -91,6 +99,8 @@ class TelegramSubmissionProcessor(
         }
     }
 }
+
+typealias AiPhotoAnalysis = ge.dogs.tbilisi.ai.DogPhotoAnalysis
 
 sealed interface SubmissionProcessingResult {
     data class Published(val photoId: String) : SubmissionProcessingResult
