@@ -2,13 +2,24 @@ const API_BASE_URL = (
   window.__APP_CONFIG__?.API_BASE_URL ??
   window.location.origin
 ).replace(/\/$/, "");
+const isNgrokHost = /\.ngrok-free\.(app|dev)$/.test(new URL(API_BASE_URL).hostname);
+
+function buildHeaders() {
+  const headers = {
+    Accept: "application/json",
+  };
+
+  if (isNgrokHost) {
+    headers["ngrok-skip-browser-warning"] = "true";
+  }
+
+  return headers;
+}
 
 export async function loadPhotoMarkers(bounds) {
   const bbox = serializeBounds(bounds);
   const response = await fetch(`${API_BASE_URL}/api/map/photos?bbox=${encodeURIComponent(bbox)}`, {
-    headers: {
-      Accept: "application/json",
-    },
+    headers: buildHeaders(),
   });
 
   if (!response.ok) {
@@ -38,9 +49,7 @@ function serializeBounds(bounds) {
 
 export async function loadPhotoDetails(photoId) {
   const response = await fetch(`${API_BASE_URL}/api/photos/${photoId}`, {
-    headers: {
-      Accept: "application/json",
-    },
+    headers: buildHeaders(),
   });
 
   if (!response.ok) {
